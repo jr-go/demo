@@ -22,7 +22,7 @@ sudo docker run -ti --net=host lkbuilder
 ps -ef | grep lkchain
 ```
 
-![websocketport](https://github.com/jr-go/demo/blob/master/img/service.png)
+![websocketport](https://raw.githubusercontent.com/jr-go/demo/master/img/service.png)
 
    其中 --rpc.ws_endpoint 参数后面的就是节点的websocket服务地址,--rpc.http_endpoint就是rpc服务地址
 
@@ -34,11 +34,11 @@ ps -ef | grep lkchain
 
    [](https://explorer.lkchain.org/#/address/0x5b9a5641db0dff5dd750e02979294498012c55fa)
 
-   ![sourcecode](https://github.com/jr-go/demo/blob/master/img/sourcecode.png)
+   ![sourcecode](https://raw.githubusercontent.com/jr-go/demo/master/img/sourcecode.png)
 
    找到该合约的abi,点击复制
 
-   ![abi](https://github.com/jr-go/demo/blob/master/img/abi.png)
+   ![abi](https://raw.githubusercontent.com/jr-go/demo/master/img/abi.png)
 
    得到该合约的abi
 
@@ -215,7 +215,7 @@ ps -ef | grep lkchain
 
    ​	订阅收到的事件数据截图如下
 
-   ![data](https://github.com/jr-go/demo/blob/master/img/data.png)
+   ![data](https://raw.githubusercontent.com/jr-go/demo/master/img/data.png)
 
    #### 四 合约调用
 
@@ -259,15 +259,15 @@ ps -ef | grep lkchain
    
    打开浏览器,找到打卡合约,找一笔带有链克的交易
    
-   ![order](https://github.com/jr-go/demo/blob/master/img/hash.png)
+   ![order](https://raw.githubusercontent.com/jr-go/demo/master/img/hash.png)
    
    点击交易hash进入详情页
    
-   ![dataparse](https://github.com/jr-go/demo/blob/master/img/dataparse.png)
+   ![dataparse](https://raw.githubusercontent.com/jr-go/demo/master/img/dataparse.png)
    
    找到数据输入的地方,点击数据解析,就可以看到这笔合约交易的orderid和gameid
    
-   ![origindata](https://github.com/jr-go/demo/blob/master/img/origindata.png)
+   ![origindata](https://raw.githubusercontent.com/jr-go/demo/master/img/origindata.png)
    
    拿到orderid和gameid后,我们就可以生成调用的getOrder函数的payload
    
@@ -324,7 +324,7 @@ ps -ef | grep lkchain
    
      查询结果截图
    
-     ![queryresult](https://github.com/jr-go/demo/blob/master/img/queryresult.png)
+     ![queryresult](https://raw.githubusercontent.com/jr-go/demo/master/img/queryresult.png)
    
    示例中查询的这一笔交易订单是在1794099块打包进区块的,所以要等到节点同步到这个区块之后,我们才可以在链上去执行eth_call查询对应的数据
    
@@ -395,7 +395,7 @@ ps -ef | grep lkchain
      
      执行结果截图
      
-     ![receipt](https://github.com/jr-go/demo/blob/master/img/receipt.png)
+     ![receipt](https://raw.githubusercontent.com/jr-go/demo/master/img/receipt.png)
      
      
      
