@@ -14,7 +14,7 @@
 sudo docker run -ti --net=host lkbuilder
 ```
 
-相比较github上的指示多加了一个--net=host的参数,这个参数的意思是该容器使用主机网络,即docker容器中监听的端口跟主机端口是一致的。执行完此命令后会进入到容器中,此时我们选择启动一个链接到现网环境的节点(当然你也可以选择起一个单节点的本地测试网络,不过这样的话就需要自己部署合约)
+相比较github上的指示多加了一个--net=host的参数,这个参数的意思是该容器使用主机网络,即docker容器中监听的端口跟主机端口是一致的。执行完此命令后会进入到容器中,选择链接到现网环境的节点的话,同步区块可能需要一天的时间,而且操作执行合约这些操作会消耗链克。简易大家选择起一个单节点的本地测试网络或者是链接到沙盒环境的节点,走一遍部署合约到调用合约，事件监听的流程后再连接正式节点操作。
 
 启动节点后,在容器内执行以下命令获取websocket服务地址和rpc服务地址,websocket服务可以用来订阅事件,rpc服务则是用来发送交易和读写合约
 
@@ -24,9 +24,46 @@ ps -ef | grep lkchain
 
 ![websocketport](https://github.com/jr-go/demo/raw/master/img/service.png)
 
-   其中 --rpc.ws_endpoint 参数后面的就是节点的websocket服务地址,--rpc.http_endpoint就是rpc服务地址
+   其中 --rpc.ws_endpoint 参数后面的就是节点的websocket服务地址,--rpc.http_endpoint就是rpc服务地址。正式节点的端口是18000和16000，沙盒环境的节点端口是38000和36000
 
-#### 三 事件监听
+ #### 三 链克转账
+
+   普通链克转账,调用transfer函数
+
+   ```java
+   private void transferDemo() throws Exception {
+           try{
+               AccountService service = new AccountService();
+               Transfer transfer = new Transfer(rpcURL);
+               // 已有密钥文件,直接将密钥文件加载进来
+               Account account = service.loadAccount("12345678",
+                       "/mnt/d/lianxiangcloud/UTC--2019-12-03T06-52-45.799046000Z--7b8b0cf6f0f3a83cff0291d3482d2179d8b1588c");
+               // 如果沒有密钥文件,可以新建一个地址
+               // 创建密钥时，需要指定密码和存储路径,密码不得小于8位
+               // Account account = service.createAccount("12345678",
+               // "/mnt/d/lianxiangcloud/");
+   
+               // 获取地址的链克余额,单位为wei,除以1e18即是链克数
+               BigInteger balance = transfer.getRpc().GetBalance(account);
+               //有充足的链克后就可以调用transfer转账了
+               BigInteger value = Helper.LianKe;
+               //从account给0x7b8b0cf6f0f3a83cff0291d3482d2179d8b1588c转1链克
+               ResponseModel rsp = transfer.transfer(account, "0x7b8b0cf6f0f3a83cff0291d3482d2179d8b1588c", value);
+               if (rsp.getError() != null) {
+                   System.out.println(rsp.getError().toString());
+                   return;
+               }
+               // 获取交易hash
+               if (rsp.getResult() != null) {
+                   System.out.println("transactionHash:" + rsp.getResult());
+               }
+           }catch (Exception e){
+               e.printStackTrace();
+           }
+       }
+   ```
+
+#### 四 事件监听
 
 1. 设置要监听的合约地址和事件(不设置的话默认会监听链上所有的合约事件)
 
@@ -186,7 +223,7 @@ ps -ef | grep lkchain
    
    ![data](https://github.com/jr-go/demo/raw/master/img/data.png)
    
-   #### 四 合约调用
+   #### 五 合约调用
    
     合约的调用需要使用rpc服务,调用合约时,需要根据要调用的function和参数生成合约调用时需要的payload。也可以使用其它的
    
@@ -352,45 +389,42 @@ ps -ef | grep lkchain
 ![queryresult](https://github.com/jr-go/demo/raw/master/img/queryresult.png)
 
    示例中查询的这一笔交易订单是在1794099块打包进区块的,所以要等到节点同步到这个区块之后,我们才可以在链上去执行eth_call查询对应的数据
-     
 
-   #### 五 普通转账
 
-   普通链克转账,调用transfer函数
 
-   ```java
-   private void transferDemo() throws Exception {
-           try{
-               AccountService service = new AccountService();
-               Transfer transfer = new Transfer(rpcURL);
-               // 已有密钥文件,直接将密钥文件加载进来
-               Account account = service.loadAccount("12345678",
-                       "/mnt/d/lianxiangcloud/UTC--2019-12-03T06-52-45.799046000Z--7b8b0cf6f0f3a83cff0291d3482d2179d8b1588c");
-               // 如果沒有密钥文件,可以新建一个地址
-               // 创建密钥时，需要指定密码和存储路径,密码不得小于8位
-               // Account account = service.createAccount("12345678",
-               // "/mnt/d/lianxiangcloud/");
-   
-               // 获取地址的链克余额,单位为wei,除以1e18即是链克数
-               BigInteger balance = transfer.getRpc().GetBalance(account);
-               BigInteger value = Helper.LianKe;
-               //从account给0x7b8b0cf6f0f3a83cff0291d3482d2179d8b1588c转1链克
-               ResponseModel rsp = transfer.transfer(account, "0x7b8b0cf6f0f3a83cff0291d3482d2179d8b1588c", value);
-               if (rsp.getError() != null) {
-                   System.out.println(rsp.getError().toString());
-                   return;
-               }
-               // 获取交易hash
-               if (rsp.getResult() != null) {
-                   System.out.println("transactionHash:" + rsp.getResult());
-               }
-           }catch (Exception e){
-               e.printStackTrace();
-           }
-       }
-   ```
+#### 六 合约部署
 
-   #### 六 其它rpc请求
+   部署合约需要合约的bytecode加上构造函数编码，我们以浏览器上的剪刀石头布_V1.0合约为例
+
+  ```java
+private static void deployContractDemo() throws Exception {
+        try {
+            AccountService service = new AccountService();
+            Transfer transfer = new Transfer(rpcURL);
+            Account account = service.loadAccount("12345678",
+                    "/mnt/d/lianxiangcloud/UTC--2019-12-03T06-52-45.799046000Z--7b8b0cf6f0f3a83cff0291d3482d2179d8b1588c");
+            //部署合约,此处部署的是一个石头剪刀布合约,大家可以
+            ResponseModel model = transfer.deployContract(account,
+                    "0x608060405234801561001057600080fd5b5033600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550610601806100616000396000f3fe60806040526004361061006d576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680632e1a7d4d146100725780638da5cb5b146100a0578063915eb32f146100f757806392d0d153146101bc578063bec082bb146101e7575b600080fd5b61009e6004803603602081101561008857600080fd5b8101908080359060200190929190505050610235565b005b3480156100ac57600080fd5b506100b5610392565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6101ba6004803603604081101561010d57600080fd5b81019080803590602001909291908035906020019064010000000081111561013457600080fd5b82018360208201111561014657600080fd5b8035906020019184600183028401116401000000008311171561016857600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f8201169050808301925050505050505091929192905050506103b8565b005b3480156101c857600080fd5b506101d1610493565b6040518082815260200191505060405180910390f35b610233600480360360408110156101fd57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610499565b005b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614151561029157600080fd5b60003073ffffffffffffffffffffffffffffffffffffffff16319050808211151515610325576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260128152602001807f62616c616e6365206e6f7420656e6f756768000000000000000000000000000081525060200191505060405180910390fd5b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166108fc839081150290604051600060405180830381858888f1935050505015801561038d573d6000803e3d6000fd5b505050565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b816000819055507f64a2cb2f4618d2a9a1b9cf17f12149c8c583b543ad49f160dd542b47d9c560073382604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200180602001828103825283818151815260200191508051906020019080838360005b83811015610454578082015181840152602081019050610439565b50505050905090810190601f1680156104815780820380516001836020036101000a031916815260200191505b50935050505060405180910390a15050565b60005481565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415156104f557600080fd5b60003073ffffffffffffffffffffffffffffffffffffffff16319050808211151515610589576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260128152602001807f62616c616e6365206e6f7420656e6f756768000000000000000000000000000081525060200191505060405180910390fd5b8273ffffffffffffffffffffffffffffffffffffffff166108fc839081150290604051600060405180830381858888f193505050501580156105cf573d6000803e3d6000fd5b5050505056fea165627a7a723058200fbb2d9ffb5b78e6e7e8e395441e184a10c17ede6c5da30dfe10081b8824e24e0029");
+            System.out.println(model.toString());
+            // 根据交易hash获取交易收据
+            if (model.getResult() != null) {
+                //休眠5秒待peer同步到区块
+                Thread.sleep(1000 * 5);
+                Receipt receipt = transfer.getRpc().GetTransactionReceipt(model.getResult().toString());
+                System.out.println(receipt.toString());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+  ```
+
+
+
+  
+
+   #### 七 其它rpc请求
 
    除了常用的合约调用和转账之外,也可以查看github上的其它rpc接口定义,来构造对应请求
 
@@ -413,8 +447,8 @@ ps -ef | grep lkchain
            System.out.println(mode.toString());
    }
    ```
- 
+
 
    **依赖的sdk jar文件在项目根目录下的/lib/sdk-1.0.0-SNAPSHOT-jar-with-dependencies.jar**
-   
+
    **sdk源码在https://github.com/jr-go/sdk**
