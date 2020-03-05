@@ -413,7 +413,8 @@ ps -ef | grep lkchain
            System.out.println(mode.toString());
    }
    ```
-
-   **完整示例代码在https://github.com/jr-go/demo**
+ 
 
    **依赖的sdk jar文件在项目根目录下的/lib/sdk-1.0.0-SNAPSHOT-jar-with-dependencies.jar**
+   
+   **sdk源码在https://github.com/jr-go/sdk**
